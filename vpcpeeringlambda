@@ -5,7 +5,7 @@ client = boto3.client('ec2')
 resource = boto3.resource('ec2')
 vpc_peering_connection = client.describe_vpc_peering_connections(Filters=[{
         'Name':'status-code', 
-        'Values':['pending-acceptance','active']
+        'Values':['pending-acceptance','failed']
     }])['VpcPeeringConnections']
     
 route_tables = client.describe_route_tables()
@@ -17,15 +17,15 @@ def lambda_handler(event,context):
         list_of_vpcs_in_route_tables = []
         
         for peering_con_vpc_info in vpc_peering_connection:  # Gathering Peering VPC connection information
+            peering_id = peering_con_vpc_info['VpcPeeringConnectionId']
+            client.accept_vpc_peering_connection( VpcPeeringConnectionId = peering_id )
             
             # for values in peering_con_vpc_info['RequesterVpcInfo']:
-            #     print(values)
-            
-            print('VPC Peering ID\t ' + peering_con_vpc_info['VpcPeeringConnectionId'])     # Print PEERING CONNECTION ID
+            print('VPC Peering ID request accepted \t ' + peering_id)     # Print PEERING CONNECTION ID
             accpeter_vpc_id = peering_con_vpc_info['AccepterVpcInfo']['VpcId']   # Filtering ACCEPTERS VPID information
             #Getting list of VPC found with ROUTE TABLES
             for rt_tables_list in route_tables['RouteTables']:   # Getting ALL THE ROUTE TABLES IN AN ACCOUNT
-                if accpeter_vpc_id in rt_tables_list['VpcId']:# Filtering with matching  ACCEPTER VPCID with EXISTING ROUTE TABLE LIST OF VPCID's
+                if accpeter_vpc_id in rt_tables_list['VpcId']:  # Filtering with matching  ACCEPTER VPCID with EXISTING ROUTE TABLE LIST OF VPCID's
                     print("===================================================================================================")
                     print("For the Accepter VPC\t" + accpeter_vpc_id +"\twith Routable ID\t" + rt_tables_list['RouteTableId'])
                     print("===================================================================================================")
@@ -36,8 +36,14 @@ def lambda_handler(event,context):
                                         RouteTableId = RoutablesID,
                                         VpcPeeringConnectionId = VpcPeeringId)
                     print("Routes added successfully")
+                elif peering_con_vpc_info['Status']['Code'] == 'failed':
+                    print('Peering has failed look for the exception errors')
+            
     except Exception as e:
         print(e.args[-1])  
+    
+
+    
     
 
     
