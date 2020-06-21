@@ -12,7 +12,6 @@ route_tables = client.describe_route_tables()
 
 def lambda_handler(event,context):
     
-   # accepter_vpc_info()
     try:
         list_of_vpcs_in_route_tables = []
         
