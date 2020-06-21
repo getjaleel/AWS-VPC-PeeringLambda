@@ -5,7 +5,7 @@ client = boto3.client('ec2')
 resource = boto3.resource('ec2')
 vpc_peering_connection = client.describe_vpc_peering_connections(Filters=[{
         'Name':'status-code', 
-        'Values':['pending-acceptance','failed']
+        'Values':['pending-acceptance','failed'] # Refer to BOTO3 documentation for filters of your choice
     }])['VpcPeeringConnections']
     
 route_tables = client.describe_route_tables()
